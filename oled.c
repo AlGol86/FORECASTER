@@ -53,10 +53,7 @@ void ff_string(char n) {
 }
 
 void send_repeat_data(char data_byte, char n) { 
-  char arr[256];
-	char i;
-	for (i=0; i<n; i++) arr[i]=data_byte;
-	i2c_wr_reg(oled_32_128_adr, 0x40, arr, n);
+	i2c_write_repeated(oled_32_128_adr, 0x40, data_byte, n);
 }
 
 void set_cursor(char x, char y) {   
@@ -253,24 +250,88 @@ void print_save(void) {
 }
 
 void print_graphic(void) { 
-  extern int graphicBuf[128];
-	char data[128];
-	char i;
-  //oled_Clear_Screen();  
-  set_cursor(0, 5);
-	for(i=0;i<128;i++) {
-		data[i]=i;
-	}
-	set_cursor(0, 3);
-  sendData(data, 128);	
+  extern char graphicBuf[128];
+	char i,y;
+  char shift;
+	shift = calculateZeroShift();
+	
+  set_cursor(0, 3);
+	send_repeat_data(0, 128);
 	set_cursor(0, 4);
-  sendData(data, 128);	
+	send_repeat_data(0, 128);
 	set_cursor(0, 5);
-  sendData(data, 128);
+	send_repeat_data(0, 128);
 	set_cursor(0, 6);
-  sendData(data, 128);
+	send_repeat_data(0, 128);
 	set_cursor(0, 7);
-  sendData(data, 128);
-
+	send_repeat_data(0, 128);
+	
+	for(i=0;i<128;i++) {
+		y=graphicBuf[i]-shift;
+		if (y<8){
+			set_cursor(i, 7);
+			send_repeat_data(0x80 >> y, 1);
+		} else if (y<16){
+			set_cursor(i, 6);
+			send_repeat_data(0x80 >> (y-8), 1);
+    } else if (y<24){
+			set_cursor(i, 5);
+			send_repeat_data(0x80 >> (y-16), 1);
+		} else if (y<32){	
+		  set_cursor(i, 4);
+			send_repeat_data(0x80 >> (y-24), 1);
+	  } else if (y<40){
+			set_cursor(i, 3);
+			send_repeat_data(0x80 >> (y-32), 1);
+		} 
+	}
 }
 
+char calculateZeroShift(void) {
+	extern char graphicBuf[128];
+	char max;
+	char min;
+	char i;
+	
+	max = graphicBuf[0];
+	min = graphicBuf[0];
+	
+	for (i=0; i<128; i++) {
+		if (graphicBuf[i]>max) max=graphicBuf[i];
+		else if ((graphicBuf[i]!=0) && (graphicBuf[i]<min)) min=graphicBuf[i];
+	}
+	
+	if ( ((max-min) >= 40) && ((graphicBuf[127]-min) > (max-graphicBuf[127])) ) return (max-39);
+	return min;
+}
+/*
+
+    _/
+  _/
+_/
+
+      set_cursor(0, 7);
+			send_repeat_data(0x80, 1);
+			set_cursor(5, 7);
+			send_repeat_data(1, 1);
+			
+			set_cursor(10, 6);
+			send_repeat_data(0x80, 1);
+			set_cursor(15, 6);
+			send_repeat_data(1, 1);
+			
+			set_cursor(20, 5);
+			send_repeat_data(0x80, 1);
+			set_cursor(25, 5);
+			send_repeat_data(1, 1);
+			
+			set_cursor(30, 4);
+			send_repeat_data(0x80, 1);
+			set_cursor(35, 4);
+			send_repeat_data(1, 1);
+			
+			set_cursor(40, 3);
+			send_repeat_data(0x80, 1);
+			set_cursor(45, 3);
+			send_repeat_data(1, 1);
+*/

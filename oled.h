@@ -33,3 +33,4 @@ void oled_print_XXnumber(int n, char pos, char transparent);
 void oled_print_XXXnumber(int n, char pos, char transparent);
 void print_save(void); 
 void print_graphic(void);
+char calculateZeroShift(void);

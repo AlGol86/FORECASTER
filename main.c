@@ -9,19 +9,35 @@ OledDigitBuffer oledBuffer;
 T_P tp;
 
 //graphic buffer
-@near int graphicBuf[128];
+char graphicBuf[128];
 
 main() { 
+  int cyclCntr = 0;
+char i;
+
   del(10000);
 	init_iic_emb_tx();
 	init_ssd1306();
 	init_bmp180();
-	
+
   while (1){
 		get_bmp180_T_P_average(&tp);
 		printPressureValue();
-		print_graphic();
+		if(cyclCntr==100) {
+			shiftGraphicBufferAndInsertNewValue((tp.P-73000)/30);
+		  print_graphic();
+			cyclCntr=0;
+	  } 
+		cyclCntr++;
 }
+}
+
+void shiftGraphicBufferAndInsertNewValue(int val){
+	char i;
+	for(i=0;i<128;i++) {
+		graphicBuf[i]=graphicBuf[i+1];
+	}
+	graphicBuf[127]=val;
 }
 
 void printPressureValue(void) {

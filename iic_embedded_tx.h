@@ -15,5 +15,6 @@
 
 void init_iic_emb_tx(void);
 void i2c_wr_reg(char address, char reg_addr, char * data, char length);
+void i2c_write_repeated(char address, char reg_addr, char val, char length);
 void i2c_read(char address, char * data, char length);
 void disable_iic_emb_tx(void);
